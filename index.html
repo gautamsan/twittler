@@ -3,23 +3,115 @@
   <head>
     <script src="jquery.js"></script>
     <script src="data_generator.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js" integrity="sha256-Sk3nkD6mLTMOF0EOpNtsIry+s1CsaqQC1rVLTAy+0yc= sha512-K1qjQ+NcF2TYO/eI3M6v8EiNYZfA95pQumfvcVrTHtwQVDG+aHRqLi/ETn2uB+1JqwYqVG3LIvdm9lj6imS/pQ==" crossorigin="anonymous"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet" integrity="sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
+    <nav class="navbar navbar-inverse">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Twittler</a>
+        </div>
+        <p class="navbar-text navbar-right">Modified by <a href="http://www.santoshgautam.net" class="navbar-link">Santosh Gautam</a></p>
+      </div>
+    </nav>
+    <div class="modal fade userHomeModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h3 class="modal-title">Tweets by <span id="selectedUser"></span></h3>
+          </div>
+          <ul id="selectedUserTweets"></ul>
+        </div>
+      </div>
+    </div>
     <script>
 
       $(document).ready(function(){
         var $body = $('body');
-        $body.html('');
 
-        var index = streams.home.length - 1;
-        while(index >= 0){
-          var tweet = streams.home[index];
-          var $tweet = $('<div></div>');
-          $tweet.text('@' + tweet.user + ': ' + tweet.message);
-          $tweet.appendTo($body);
-          index -= 1;
+        //Convert date to "[date] ago" using moment.js
+        var convertDate = function(tweetDate) {
+          var timeAgo = moment(tweetDate).fromNow();
+          return timeAgo;
+        };
+
+        //Utility function retrieves specific user data
+        var userHome = function(whichUser) {
+          return streams.users[whichUser];
+        };
+
+        //Need to compare the stream lengths for refresh
+        var previousStreamsLength = 0;
+
+        var fetchNewTweet = function() {
+          previousStreamsLength = streams.home.length;
+          //For easy removal during refresh
+          var $tweetCollection = $('<div class="tweetCollection"></div>');
+          var index = streams.home.length - 1;
+
+          while(index >= 0){
+            var tweet = streams.home[index];
+            var $userImg = $('<span class="profile-img"><img src="usr_img.jpg"></span>');
+            var $tweetUser =  $('<div></div>');
+            var $date =  $('<span></span>');
+            var $message = $('<div></div>');
+
+            $tweetUser.html('<a href="#" data-toggle="modal" data-target=".userHomeModal" data-username="' + tweet.user + '"">'+ '@' + tweet.user + '</a>')
+            $date.text(" - " + convertDate(tweet.created_at));
+            $message.text(tweet.message);
+
+            $userImg.appendTo($tweetCollection);
+            $tweetUser.appendTo($userImg);
+            $date.appendTo($message);
+            $message.appendTo($tweetCollection);
+            $tweetCollection.appendTo($body);
+
+            index -= 1;
+          }
         }
 
+        //Checks for new data every 5 seconds
+        var refreshData = function() {
+          setTimeout(function() {
+            //New data found
+            if(streams.home.length > previousStreamsLength) {
+              $("body").find(".tweetCollection").remove();
+              fetchNewTweet();
+            }
+            return refreshData();
+          }, 5000);
+        }
+
+        fetchNewTweet();
+        refreshData();
+
+        //Populate the modal-dialog
+        $('.userHomeModal').on('show.bs.modal', function (event) {
+          var triggerLink = $(event.relatedTarget) // link that triggered the modal
+          var user = triggerLink.data('username') // Extract info from data-* attributes
+          var modal = $(this)
+
+          modal.find('#selectedUser').text('@' + user);
+
+          var $tweetHolder = modal.find('#selectedUserTweets');
+          var selectedUserTweets = userHome(user);
+
+          //create and populate lists with specified user's tweet data
+          selectedUserTweets.forEach(function(tweet) {
+            var $list = $('<li class="tweets"></li>');
+            $list.appendTo($tweetHolder);
+            $list.html(tweet.message + '<span class="now"> - '+ moment(tweet.created_at).fromNow() + '</span>');
+          });
+        });
+
+        $('.userHomeModal').on('hidden.bs.modal',function(e){
+          //Start clean slate lists
+          $(this).find("li").remove();
+        });
       });
 
     </script>

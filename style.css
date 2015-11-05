@@ -1,0 +1,49 @@
+.profile-img {
+	margin: 0 10px 0 25px;
+}
+
+span + div {
+    font-size: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: aliceblue;
+}
+
+span div {
+	font-size: 25px;
+	padding: 0;
+	background-color: transparent;
+	margin: -43px 0 0 90px;
+}
+
+div span {
+	font-size: 12px;
+}
+
+#selectedUser {
+	font-size: 24px;
+}
+
+.modal-header {
+	background-color: antiquewhite;
+}
+
+.navbar-header {
+	padding: 30px;
+}
+
+.navbar-brand {
+	font-size: 48px;
+}
+
+.navbar-text {
+	margin: 45px;
+}
+
+button span {
+	font-size: 30px;
+}
+
+span.now {
+	font-size: 12px;
+}
